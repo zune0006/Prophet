@@ -34,22 +34,34 @@
   <button onclick="analyze()">분석하기</button>
 
   <h2>12궁 이름</h2>
-  <pre id="result">결과가 여기에 표시됩니다.</pre>
+  <pre id="palaceNames">palaceNames 결과가 여기에 표시됩니다.</pre>
 
+  <h2>astrolabe</h2>
+  <pre id="astrolabe">astrolabe 결과가 여기에 표시됩니다.</pre>
+
+  
   <script>
     function analyze() {
-      const date = document.getElementById("birthDate").value;
-      const timeIndex = parseInt(document.getElementById("timeIndex").value);
-      const gender = document.getElementById("gender").value;
+      try {
+        let date       = document.getElementById("birthDate").value;
+        let timeIndex  = parseInt(document.getElementById("timeIndex").value);
+        let gender     = document.getElementById("gender").value;
 
-      if (!date || isNaN(timeIndex)) {
-        alert("모든 값을 입력해주세요.");
-        return;
+        if (!date || isNaN(timeIndex)) {
+          alert("모든 값을 입력해주세요.");
+          return;
+        }
+
+        let astrolabe   = iztro.astro.bySolar(date, timeIndex, gender, true, "ko-KR");
+        document.getElementById("astrolabe").textContent = astrolabe.toString();
+      
+      
+        let palaceNames = astrolabe.palaces.map(p => p.name);
+        document.getElementById("palaceNames").textContent = palaceNames.join("\n");
+        
+      } catch(ex) {
+        console.log(ex);
       }
-
-      const astrolabe = iztro.astro.bySolar(date, timeIndex, gender, true, "ko-KR");
-      const palaceNames = astrolabe.palaces.map(p => p.name);
-      document.getElementById("result").textContent = palaceNames.join("\n");
     }
   </script>
 </body>
