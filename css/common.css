@@ -1,0 +1,9 @@
+* {
+  
+}
+
+.jc_center{
+  display:flex;
+  justify-content:center;
+  vertical-align:center;
+}
