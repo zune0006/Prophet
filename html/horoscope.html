@@ -48,7 +48,7 @@
       }
 
       const astrolabe = iztro.astro.bySolar(date, timeIndex, gender, true, "ko-KR");
-      const palaceNames = astrolabe.palaces().map(p => p.name);
+      const palaceNames = astrolabe.palaces.map(p => p.name);
       document.getElementById("result").textContent = palaceNames.join("\n");
     }
   </script>
