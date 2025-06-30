@@ -13,12 +13,22 @@
           let _fixLeap       = true;//true/false whether to fix the leap month. if true, the first half of the leap month is counted as the previous month, and the second half is counted as the next month
           let _language      = "ko-KR";//zh-TW, en-US, ko-KR, ja-JP, zh-CN
           
-          let _astrolabe = astro.bySolar(_solarDateStr, _timeIndex, _gender, _fixLeap, _language);
+          let _astrolabe = iztro.astro.bySolar(_solarDateStr, _timeIndex, _gender, _fixLeap, _language);
           //var astrolabe = astro.bySolar("2000-8-16", 2, "女");
           //var astrolabe = astro.byLunar("2000-7-17", 2, "女", false);
-          let _horoscope = _astrolabe.horoscope(new Date());
+          console.log(_astrolabe);
 
+          let _horoscope = _astrolabe.horoscope(new Date());
           console.log(_horoscope);
+
+          let _heavenlyStem    = "庚";//heavenly stem name
+          let _earthlyBranch   = "辰";//earthly branch name
+          let _scope           = "decadal";//to specific the scope of the horo 'decadal' | 'yearly'
+          
+          let _horoscopeStars = iztro.star.getHoroscopeStar(_heavenlyStem, _earthlyBranch, _scope);
+          //horoscopeStars = star.getHoroscopeStar("庚", "辰", "decadal");
+          console.log(_horoscopeStars);
+
         } catch(ex) {
           console.log(ex);
         }
