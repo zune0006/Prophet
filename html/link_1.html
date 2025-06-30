@@ -4,11 +4,10 @@
     <script src="https://cdn.jsdelivr.net/npm/iztro/dist/iztro.min.js"></script>
     <script src="../js/link_1.js"></script>
     <script>
-var astrolabe = astro.bySolar("2000-8-16", 2, "女");
-//var astrolabe = astro.byLunar("2000-7-17", 2, "女", false);
-
-astrolabe.horoscope(new Date());
-      
+      //astro.bySolar(solarDateStr, timeIndex, gender, fixLeap, language)
+      var astrolabe = astro.bySolar("2000-8-16", 2, "女");
+      //var astrolabe = astro.byLunar("2000-7-17", 2, "女", false);
+      astrolabe.horoscope(new Date());
     </script>
   </header>
 
@@ -55,6 +54,12 @@ astrolabe.horoscope(new Date());
           https://cdn.jsdelivr.net/npm/iztro/dist/iztro.min.js
 
           <a href="./horoscope.html">horoscope.html</a>
+
+          //astro.bySolar(solarDateStr, timeIndex, gender, fixLeap, language)
+          var astrolabe = astro.bySolar("2000-8-16", 2, "女");
+          //var astrolabe = astro.byLunar("2000-7-17", 2, "女", false);
+          astrolabe.horoscope(new Date());
+
         </pre>
       </div>
     </top>
