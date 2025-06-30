@@ -4,10 +4,17 @@
     <script src="https://cdn.jsdelivr.net/npm/iztro/dist/iztro.min.js"></script>
     <script src="../js/link_1.js"></script>
     <script>
-      //astro.bySolar(solarDateStr, timeIndex, gender, fixLeap, language)
-      var astrolabe = astro.bySolar("2000-8-16", 2, "女");
-      //var astrolabe = astro.byLunar("2000-7-17", 2, "女", false);
-      astrolabe.horoscope(new Date());
+      function getResult(){
+        try {
+          //astro.bySolar(solarDateStr, timeIndex, gender, fixLeap, language)
+          var astrolabe = astro.bySolar("2000-8-16", 2, "女");
+          //var astrolabe = astro.byLunar("2000-7-17", 2, "女", false);
+          astrolabe.horoscope(new Date());
+          
+        } catch(ex) {
+          console.log(ex);
+        }
+      }
     </script>
   </header>
 
