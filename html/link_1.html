@@ -1,11 +1,18 @@
 <html>
   <header>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!--   -->
     <script src="https://cdn.jsdelivr.net/npm/iztro/dist/iztro.min.js"></script>
     <script src="../js/link_1.js"></script>
     <script>
       function getResult(){
         try {
+          let _solarDateStr  = "";//"2000-8-16"
+          let _timeIndex     = "";//0~12 (0~24h)
+          let _gender        = "male";//"女" gender【male/female】
+          let _fixLeap       = true;//true/false whether to fix the leap month. if true, the first half of the leap month is counted as the previous month, and the second half is counted as the next month
+          let _language      = "ko-KR";//zh-TW, en-US, ko-KR, ja-JP, zh-CN
+          
           //astro.bySolar(solarDateStr, timeIndex, gender, fixLeap, language)
           var astrolabe = astro.bySolar("2000-8-16", 2, "女");
           //var astrolabe = astro.byLunar("2000-7-17", 2, "女", false);
