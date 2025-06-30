@@ -1,9 +1,3 @@
-
-var iztro = require("iztro");
-
-var { astro } = require("iztro");
-
-// 通过阳历获取星盘信息
 var astrolabe = astro.bySolar("2000-8-16", 2, "女");
 
 // 通过农历获取星盘信息
