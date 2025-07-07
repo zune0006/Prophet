@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>통합 운세 분석기 (Skypack ESM)</title>
+  <title>🔮 통합 운세 분석기</title>
   <style>
     body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 1em; }
     h1, h2 { text-align: center; }
@@ -27,8 +27,8 @@
       <input type="time" name="birthTime" required>
     </div>
     <div>
-      <label>출생지 (예: Seoul, Korea)</label>
-      <input type="text" name="birthPlace" placeholder="City, Country" required>
+      <label>출생지 (City, Country)</label>
+      <input type="text" name="birthPlace" required>
     </div>
     <div>
       <label>성별</label>
@@ -42,21 +42,19 @@
 
   <div id="result"></div>
 
-  <script type="module">
-    import ephemeris from 'https://cdn.skypack.dev/ephemeris@0.1.0';
-
-    const { constants, processor, moshier } = ephemeris;
-
-    // 헬퍼 함수들 (이전 예제와 동일)
+  <!-- 1) non-module 방식으로 ephemeris 로드 -->
+  <script src="https://cdn.jsdelivr.net/npm/ephemeris@0.1.0/ephemeris-0.1.0.js"></script>
+  <script>
+    // 2) 헬퍼 함수들
     const stems    = ["갑","을","병","정","무","기","경","신","임","계"];
     const branches = ["자","축","인","묘","진","사","오","미","신","유","술","해"];
     const zodiac   = [
-      { name:"양자리", start: 0 },   { name:"황소자리", start:30 },
-      { name:"쌍둥이자리", start:60 }, { name:"게자리",   start:90 },
-      { name:"사자자리", start:120 }, { name:"처녀자리", start:150 },
-      { name:"천칭자리", start:180 }, { name:"전갈자리", start:210 },
-      { name:"사수자리", start:240 }, { name:"염소자리", start:270 },
-      { name:"물병자리", start:300 }, { name:"물고기자리", start:330 }
+      { name:"양자리",   start:   0 }, { name:"황소자리",  start:  30 },
+      { name:"쌍둥이자리", start:  60 }, { name:"게자리",    start:  90 },
+      { name:"사자자리",  start: 120 }, { name:"처녀자리",  start: 150 },
+      { name:"천칭자리",  start: 180 }, { name:"전갈자리",  start: 210 },
+      { name:"사수자리",  start: 240 }, { name:"염소자리",  start: 270 },
+      { name:"물병자리",  start: 300 }, { name:"물고기자리", start: 330 }
     ];
 
     function getYearPillar(year) {
@@ -73,7 +71,7 @@
     }
 
     function getLuckCycles(gender, birthYear) {
-      const dir = gender === "male" ? 1 : -1;
+      const dir = (gender === "male" ?  1 : -1);
       const base = (birthYear - 4) % 60;
       const cycles = [];
       for (let i = 1; i <= 8; i++) {
@@ -86,41 +84,48 @@
     async function geocode(place) {
       const res = await fetch(
         "https://nominatim.openstreetmap.org/search?" +
-        new URLSearchParams({ q: place, format: "json", limit: 1 })
+        new URLSearchParams({ q: place, format: "json", limit:1 })
       );
       const arr = await res.json();
       if (!arr.length) throw new Error("출생지를 찾을 수 없습니다");
-      return { lat: +arr[0].lat, lon: +arr[0].lon };
+      return { lat:+arr[0].lat, lon:+arr[0].lon };
     }
 
+    // 3) 폼 처리 & 연동
     const form = document.getElementById("birthForm");
     const resultDiv = document.getElementById("result");
 
     form.addEventListener("submit", async e => {
       e.preventDefault();
-      resultDiv.innerHTML = "<p>로딩 중…</p>";
+      resultDiv.textContent = "로딩 중…";
+
       try {
-        const data = new FormData(form);
-        const [d, t, p, g] = [
-          data.get("birthDate"),
-          data.get("birthTime"),
-          data.get("birthPlace"),
-          data.get("gender")
+        const fd = new FormData(form);
+        const [dateStr, timeStr, place, gender] = [
+          fd.get("birthDate"),
+          fd.get("birthTime"),
+          fd.get("birthPlace"),
+          fd.get("gender")
         ];
-        const [Y, M, D] = d.split("-").map(v => +v);
-        const [h, m] = t.split(":").map(v => +v);
+        const [Y,M,D] = dateStr.split("-").map(v=>+v);
+        const [h,m]   = timeStr.split(":").map(v=>+v);
 
-        const { lat, lon } = await geocode(p);
+        // 위치
+        const { lat, lon } = await geocode(place);
 
-        constants.tlong = lon;
-        constants.glat = lat;
-        processor.init();
+        // Ephemeris 세팅
+        $const.tlong = lon;
+        $const.glat  = lat;
+        $processor.init();
 
+        // 주요 행성 계산
         const planets = ["sun","moon","mercury","venus","mars","jupiter","saturn"];
         const info = planets.map(name => {
-          processor.calc({ year:Y, month:M, day:D, hours:h, minutes:m, seconds:0 },
-                         moshier.body[name]);
-          const lonDeg = moshier.body[name].position.longitude;
+          $processor.calc(
+            { year:Y, month:M, day:D, hours:h, minutes:m, seconds:0 },
+            $moshier.body[name]
+          );
+          const lonDeg = $moshier.body[name].position.longitude;
           return {
             name,
             deg: lonDeg.toFixed(2),
@@ -128,9 +133,11 @@
           };
         });
 
+        // 사주 & 대운
         const yearPillar = getYearPillar(Y);
-        const luckCycles = getLuckCycles(g, Y);
+        const cycles     = getLuckCycles(gender, Y);
 
+        // 결과 렌더링
         let html = `
           <section>
             <h2>1. 사주 (년주)</h2>
@@ -139,7 +146,7 @@
           <section>
             <h2>2. 행성별 운세</h2>
             <ul>`;
-        info.forEach(p => {
+        info.forEach(p=>{
           html += `<li>🌟 ${p.name.toUpperCase()}: ${p.sign} (${p.deg}°)</li>`;
         });
         html += `</ul>
@@ -147,14 +154,15 @@
           <section>
             <h2>3. 대운</h2>
             <ul>`;
-        luckCycles.forEach((c,i) => {
+        cycles.forEach((c,i)=>{
           html += `<li>${(i+1)*10}대운: ${c}</li>`;
         });
         html += `</ul>
           </section>`;
 
         resultDiv.innerHTML = html;
-      } catch(err) {
+      }
+      catch(err) {
         console.log(err);
         resultDiv.innerHTML = `<p style="color:red;">오류: ${err.message}</p>`;
       }
