@@ -44,7 +44,17 @@
 
   <!-- Moshier Ephemeris 라이브러리 불러오기 -->
   <script src="https://cdn.jsdelivr.net/gh/mivion/ephemeris@master/ephemeris-0.1.0.js"></script>
+
   <script>
+/*
+- Nominatim API로 출생지를 위도·경도로 변환
+- Moshier Ephemeris (mivion/ephemeris)로 태양·달·수성·금성·화성·목성·토성의 황도경 계산
+- 황도경을 기반으로 별자리(12궁) 판정
+- 입력 연도로 년주(천간·지지) 계산
+- 성별·출생 연도로 단순화한 8대운 계산
+*/
+
+    
   // HTML 요소
   const form = document.getElementById("birthForm");
   const resultDiv = document.getElementById("result");
