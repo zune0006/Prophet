@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>통합 운세 분석기 (ESM 전용)</title>
+  <title>통합 운세 분석기 (Skypack ESM)</title>
   <style>
     body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 1em; }
     h1, h2 { text-align: center; }
@@ -41,12 +41,13 @@
   </form>
 
   <div id="result"></div>
-  
-<script src="https://cdn.jsdelivr.net/npm/ephemeris@0.1.0/ephemeris-0.1.0.js"></script>
 
-  <script>
+  <script type="module">
+    import ephemeris from 'https://cdn.skypack.dev/ephemeris@0.1.0';
 
-    // — 헬퍼 함수들 —
+    const { constants, processor, moshier } = ephemeris;
+
+    // 헬퍼 함수들 (이전 예제와 동일)
     const stems    = ["갑","을","병","정","무","기","경","신","임","계"];
     const branches = ["자","축","인","묘","진","사","오","미","신","유","술","해"];
     const zodiac   = [
@@ -92,35 +93,29 @@
       return { lat: +arr[0].lat, lon: +arr[0].lon };
     }
 
-    // — 폼 & 결과 바인딩 —
-    const form      = document.getElementById("birthForm");
+    const form = document.getElementById("birthForm");
     const resultDiv = document.getElementById("result");
 
     form.addEventListener("submit", async e => {
       e.preventDefault();
       resultDiv.innerHTML = "<p>로딩 중…</p>";
-
       try {
-        // 1) 입력 파싱
-        const data      = new FormData(form);
+        const data = new FormData(form);
         const [d, t, p, g] = [
           data.get("birthDate"),
           data.get("birthTime"),
           data.get("birthPlace"),
           data.get("gender")
         ];
-        const [Y, M, D] = d.split("-").map(v=>+v);
-        const [h, m]    = t.split(":").map(v=>+v);
+        const [Y, M, D] = d.split("-").map(v => +v);
+        const [h, m] = t.split(":").map(v => +v);
 
-        // 2) 좌표 변환
         const { lat, lon } = await geocode(p);
 
-        // 3) Ephemeris 계산 준비
         constants.tlong = lon;
-        constants.glat  = lat;
+        constants.glat = lat;
         processor.init();
 
-        // 4) 주요 행성 위치 뽑고 별자리 판정
         const planets = ["sun","moon","mercury","venus","mars","jupiter","saturn"];
         const info = planets.map(name => {
           processor.calc({ year:Y, month:M, day:D, hours:h, minutes:m, seconds:0 },
@@ -133,11 +128,9 @@
           };
         });
 
-        // 5) 사주·대운 계산
         const yearPillar = getYearPillar(Y);
         const luckCycles = getLuckCycles(g, Y);
 
-        // 6) 렌더링
         let html = `
           <section>
             <h2>1. 사주 (년주)</h2>
@@ -159,10 +152,10 @@
         });
         html += `</ul>
           </section>`;
-        
+
         resultDiv.innerHTML = html;
-      }
-      catch(err) {
+      } catch(err) {
+        console.log(err);
         resultDiv.innerHTML = `<p style="color:red;">오류: ${err.message}</p>`;
       }
     });
