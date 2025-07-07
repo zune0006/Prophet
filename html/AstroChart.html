@@ -80,5 +80,126 @@
       }
     });
   </script>
+
+  <script>
+/*    
+ 1단계: 사주팔자 계산 기능 추가
+✅ 기능 개요:
+- 음력/양력 변환
+- 천간/지지 및 오행(목화토금수) 계산
+- 태어난 시점의 팔자(년·월·일·시) 구성
+🔧 간단한 천간/지지 계산
+*/
+function getHeavenlyStem(index) {
+  const stems = ["갑","을","병","정","무","기","경","신","임","계"];
+  return stems[index % 10];
+}
+
+function getEarthlyBranch(index) {
+  const branches = ["자","축","인","묘","진","사","오","미","신","유","술","해"];
+  return branches[index % 12];
+}
+
+// 예: 2021년생, 양력 기준
+const year = 2021;
+const stemIndex = (year - 4) % 10;
+const branchIndex = (year - 4) % 12;
+const yearPillar = getHeavenlyStem(stemIndex) + getEarthlyBranch(branchIndex);
+  </script>
+
+  <script>
+const planetMeanings = {
+  sun: "자아와 기질",
+  moon: "감정과 감성",
+  venus: "연애와 아름다움",
+  mars: "의욕과 에너지",
+  jupiter: "행운과 성장",
+  saturn: "책임과 한계"
+};
+
+// 예: 사용자의 출생 차트에서 각 행성의 별자리 도출 후 해석
+function interpretPlanet(sign, planet) {
+  return `당신의 ${planet}은 ${sign} 자리에 위치해 있으며, ${planetMeanings[planet]}에 영향을 줍니다.`;
+}
+  </script>
+
+  <script>
+/*
+2단계: 행성별 운세 분석 기능 확장 (서양 점성술 기반)
+🔮 핵심 요소:
+- 태양: 기질, 성향
+- 달: 감정, 무의식
+- 금성: 연애, 미적 감성
+- 화성: 행동력, 추진력
+- 목성: 행운, 확장
+- 토성: 책임, 제한
+*/ 
+const planetMeanings = {
+  sun: "자아와 기질",
+  moon: "감정과 감성",
+  venus: "연애와 아름다움",
+  mars: "의욕과 에너지",
+  jupiter: "행운과 성장",
+  saturn: "책임과 한계"
+};
+
+// 예: 사용자의 출생 차트에서 각 행성의 별자리 도출 후 해석
+function interpretPlanet(sign, planet) {
+  return `당신의 ${planet}은 ${sign} 자리에 위치해 있으며, ${planetMeanings[planet]}에 영향을 줍니다.`;
+}    
+  </script>
+
+  <script>
+/*
+3단계: 대운/세운 분석 기능 (사주 기반 확장)
+⏳ 대운 계산 개요:
+- 출생일 기준으로 약 10년 단위로 인생 흐름 변화
+- 대운은 성별, 생년월일, 태어난 시간에 따라 천간·지지 변화로 나타남
+- 세운은 특정 해의 운세 흐름 분석
+*/
+function calculateLuckCycles(gender, birthYear, birthMonth, birthDay) {
+  // 성별/음양에 따라 진행방향 결정 (단순화 예시)
+  const direction = gender === "male" ? "forward" : "backward";
+
+  const baseStem = (birthYear - 4) % 10;
+  const baseBranch = (birthYear - 4) % 12;
+
+  let cycles = [];
+  for (let i = 1; i <= 8; i++) {
+    const stem = getHeavenlyStem(baseStem + (direction === "forward" ? i : -i));
+    const branch = getEarthlyBranch(baseBranch + (direction === "forward" ? i : -i));
+    cycles.push(`대운 ${i}: ${stem}${branch}`);
+  }
+  return cycles;
+}
+  </script>
+
+  <script>
+/*
+🎁 통합 예시 흐름
+- HTML 폼에서 생년월일·시간·출생지·성별 입력
+- 좌표 변환: 출생지 → 위도/경도
+- 시간대 변환 & 현지 시간 처리
+- 사주팔자 (년·월·일·시) 천간·지지 구성
+- 행성 위치 계산 → 운세 해석
+- 대운/세운 출력 → 인생 흐름 분석
+- 결과를 카드 형식 또는 SVG 차트로 시각화
+*/
+  </script>
+
+
+  <script>
+  </script>
+
+  <script>
+  </script>
+
+  <script>
+  </script>
+
+  <script>
+  </script>
+
+  
 </body>
 </html>
