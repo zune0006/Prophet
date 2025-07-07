@@ -1,46 +1,193 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Ephemeris Sample - Sun Position</title>
+  <title>통합 운세 분석기</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 1em; }
+    h1, h2 { text-align: center; }
+    form > div { margin: 0.5em 0; }
+    label { display: block; margin-bottom: 0.2em; }
+    input, select, button { width: 100%; padding: 0.5em; font-size: 1em; }
+    #result { margin-top: 2em; border-top: 1px solid #ddd; padding-top: 1em; }
+    section { margin-bottom: 2em; }
+    ul { padding-left: 1.2em; }
+  </style>
 </head>
 <body>
-  <h2>오늘의 태양 위치 🌞</h2>
-  <div id="output">로딩 중...</div>
 
-  <!-- Moshier 기반 ephemeris 스크립트 -->
-  <script src="https://cdn.jsdelivr.net/npm/ephemeris@2.0.0/index.min.js"></script>
+  <h1>🔮 통합 운세 분석기</h1>
+  <form id="birthForm">
+    <div>
+      <label>생년월일</label>
+      <input type="date" name="birthDate" required>
+    </div>
+    <div>
+      <label>출생 시간</label>
+      <input type="time" name="birthTime" required>
+    </div>
+    <div>
+      <label>출생지 (예: Seoul, Korea)</label>
+      <input type="text" name="birthPlace" placeholder="City, Country" required>
+    </div>
+    <div>
+      <label>성별</label>
+      <select name="gender" required>
+        <option value="male">남성</option>
+        <option value="female">여성</option>
+      </select>
+    </div>
+    <button type="submit">운세 분석하기</button>
+  </form>
+
+  <div id="result"></div>
+
+  <!-- Moshier Ephemeris 라이브러리 불러오기 -->
+  <script src="https://cdn.jsdelivr.net/gh/mivion/ephemeris@master/ephemeris-0.1.0.js"></script>
   <script>
-    // 날짜 설정 (예: 현재 날짜)
-    const now = new Date();
-    const date = {
-      year: now.getFullYear(),
-      month: now.getMonth() + 1,
-      day: now.getDate(),
-      hours: now.getHours(),
-      minutes: now.getMinutes(),
-      seconds: now.getSeconds()
-    };
+  // HTML 요소
+  const form = document.getElementById("birthForm");
+  const resultDiv = document.getElementById("result");
 
-    // 관측 위치 (예: 베를린)
-    $const.tlong = 13.4050; // 경도
-    $const.glat = 52.5200;  // 위도
+  // 천간·지지 배열
+  const stems   = ["갑","을","병","정","무","기","경","신","임","계"];
+  const branches= ["자","축","인","묘","진","사","오","미","신","유","술","해"];
 
-    // 계산 시작
-    $processor.init();
-    $processor.calc(date, $moshier.body.sun);
+  // 황도대 별자리 배열
+  const zodiac = [
+    { name:"양자리", start: 0 },
+    { name:"황소자리", start:30 },
+    { name:"쌍둥이자리", start:60 },
+    { name:"게자리", start:90 },
+    { name:"사자자리", start:120 },
+    { name:"처녀자리", start:150 },
+    { name:"천칭자리", start:180 },
+    { name:"전갈자리", start:210 },
+    { name:"사수자리", start:240 },
+    { name:"염소자리", start:270 },
+    { name:"물병자리", start:300 },
+    { name:"물고기자리", start:330 }
+  ];
 
-    // 결과 출력
-    const pos = $moshier.body.sun.position;
-    const html = `
-      <ul>
-        <li><strong>적경 (RA)</strong>: ${pos.ra.toFixed(5)} 시간</li>
-        <li><strong>적위 (Dec)</strong>: ${pos.dec.toFixed(5)} 도</li>
-        <li><strong>황경 (Longitude)</strong>: ${pos.longitude.toFixed(5)} 도</li>
-        <li><strong>거리 (Distance)</strong>: ${pos.distance.toFixed(5)} AU</li>
-      </ul>
-    `;
-    document.getElementById("output").innerHTML = html;
+  // 행성별 해석 키워드
+  const planetMeanings = {
+    sun:    "자아와 기질",
+    moon:   "감정과 무의식",
+    mercury:"사고와 의사소통",
+    venus:  "사랑과 미적 감성",
+    mars:   "행동력과 추진력",
+    jupiter:"성장과 행운",
+    saturn: "책임과 인내"
+  };
+
+  // 천간·지지 계산 (년주)
+  function getYearPillar(year){
+    const i = (year - 4) % 60; 
+    return stems[i % 10] + branches[i % 12];
+  }
+
+  // 별자리 결정 (황경 기준)
+  function getZodiacName(lon){
+    lon = (lon % 360 + 360) % 360;
+    for(let i=zodiac.length-1; i>=0; i--){
+      if(lon >= zodiac[i].start) return zodiac[i].name;
+    }
+    return zodiac[0].name;
+  }
+
+  // 대운 계산 (단순 예시)
+  function getLuckCycles(gender, birthYear){
+    const dir = (gender==="male")? 1 : -1;
+    const base = (birthYear - 4) % 60;
+    const cycles = [];
+    for(let i=1; i<=8; i++){
+      const idx = (base + dir*i + 60) % 60;
+      cycles.push(stems[idx % 10] + branches[idx % 12]);
+    }
+    return cycles;
+  }
+
+  // Nominatim으로 지명→위도경도
+  async function geocode(place){
+    const res = await fetch(
+      "https://nominatim.openstreetmap.org/search?" +
+      new URLSearchParams({ q:place, format:"json", limit:1 })
+    );
+    const j = await res.json();
+    if(j.length===0) throw new Error("위치를 찾을 수 없습니다");
+    return { lat:parseFloat(j[0].lat), lon:parseFloat(j[0].lon) };
+  }
+
+  form.addEventListener("submit", async e=>{
+    e.preventDefault();
+    resultDiv.innerHTML = "<p>로딩 중…</p>";
+
+    try {
+      // 1) 입력 처리
+      const data = new FormData(form);
+      const [dateStr, timeStr, place, gender] = [
+        data.get("birthDate"),
+        data.get("birthTime"),
+        data.get("birthPlace"),
+        data.get("gender")
+      ];
+      const [Y, M, D] = dateStr.split("-").map(x=>+x);
+      const [h, m] = timeStr.split(":").map(x=>+x);
+
+      // 2) geocode → 위도·경도
+      const {lat, lon} = await geocode(place);
+
+      // 3) Ephemeris로 행성 위치 계산
+      const astroDate = { year:Y, month:M, day:D, hours:h, minutes:m, seconds:0 };
+      $const.tlong = lon;  
+      $const.glat  = lat;  
+      $processor.init();
+      const bodies = ["sun","moon","mercury","venus","mars","jupiter","saturn"];
+      const planetInfo = bodies.map(planet=>{
+        $processor.calc(astroDate, $moshier.body[planet]);
+        const pos = $moshier.body[planet].position;
+        const sign = getZodiacName(pos.longitude);
+        return {
+          name: planet,
+          lon: pos.longitude.toFixed(2),
+          sign: sign,
+          meaning: planetMeanings[planet]
+        };
+      });
+
+      // 4) 사주(년주)
+      const yearPillar = getYearPillar(Y);
+
+      // 5) 대운
+      const luck = getLuckCycles(gender, Y);
+
+      // 6) 결과 렌더링
+      let html = "";
+      // 사주
+      html += `<section><h2>1. 사주 (년주)</h2>
+               <p>출생 연도의 천간·지지: <strong>${yearPillar}</strong></p>
+               </section>`;
+
+      // 행성 운세
+      html += `<section><h2>2. 행성별 운세</h2><ul>`;
+      planetInfo.forEach(p=>{
+        html += `<li>🌟 ${p.name.toUpperCase()}: ${p.sign} (${p.lon}°) — ${p.meaning}에 영향</li>`;
+      });
+      html += `</ul></section>`;
+
+      // 대운
+      html += `<section><h2>3. 대운</h2><ul>`;
+      luck.forEach((c,i)=>{
+        html += `<li>${(i+1)*10}대운: <strong>${c}</strong></li>`;
+      });
+      html += `</ul></section>`;
+
+      resultDiv.innerHTML = html;
+    }
+    catch(err){
+      resultDiv.innerHTML = `<p style="color:red;">오류: ${err.message}</p>`;
+    }
+  });
   </script>
 </body>
 </html>
