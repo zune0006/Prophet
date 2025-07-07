@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>간단 운세 보기</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; }
+    input, select, button { margin: 0.5em 0; padding: 0.5em; font-size: 1em; }
+    #result { margin-top: 2em; }
+  </style>
+</head>
+<body>
+  <h2>🌌 내 운세를 확인해보세요</h2>
+  <form id="birthForm">
+    <label>생년월일:</label><br>
+    <input type="date" name="birthDate" required><br>
+
+    <label>출생 시간:</label><br>
+    <input type="time" name="birthTime" required><br>
+
+    <label>출생지 (예: Seoul, Korea):</label><br>
+    <input type="text" name="birthPlace" required><br>
+
+    <label>성별:</label><br>
+    <select name="gender" required>
+      <option value="male">남성</option>
+      <option value="female">여성</option>
+    </select><br>
+
+    <button type="submit">운세 보기</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    document.getElementById("birthForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const dateStr = form.get("birthDate");
+      const gender = form.get("gender");
+      const birthDate = new Date(dateStr);
+
+      // 별자리 계산 (태양 기준, 양력)
+      const zodiacSigns = [
+        { sign: "물병자리", start: "01-20", end: "02-18", trait: "창의력과 독립성" },
+        { sign: "물고기자리", start: "02-19", end: "03-20", trait: "감성적이고 직관적임" },
+        { sign: "양자리", start: "03-21", end: "04-19", trait: "열정과 리더십" },
+        { sign: "황소자리", start: "04-20", end: "05-20", trait: "안정과 인내" },
+        { sign: "쌍둥이자리", start: "05-21", end: "06-20", trait: "호기심과 커뮤니케이션 능력" },
+        { sign: "게자리", start: "06-21", end: "07-22", trait: "가족애와 감수성" },
+        { sign: "사자자리", start: "07-23", end: "08-22", trait: "자신감과 창조성" },
+        { sign: "처녀자리", start: "08-23", end: "09-22", trait: "분석적 사고와 세심함" },
+        { sign: "천칭자리", start: "09-23", end: "10-22", trait: "조화와 사회성" },
+        { sign: "전갈자리", start: "10-23", end: "11-21", trait: "열정과 탐구심" },
+        { sign: "사수자리", start: "11-22", end: "12-21", trait: "모험심과 철학적 사고" },
+        { sign: "염소자리", start: "12-22", end: "01-19", trait: "책임감과 끈기" },
+      ];
+
+      const month = birthDate.getMonth() + 1;
+      const day = birthDate.getDate();
+      const mmdd = (month < 10 ? "0" + month : month) + "-" + (day < 10 ? "0" + day : day);
+      let found;
+
+      for (const z of zodiacSigns) {
+        if ((z.start <= mmdd && mmdd <= z.end) ||
+            (z.sign === "염소자리" && (mmdd >= "12-22" || mmdd <= "01-19"))) {
+          found = z;
+          break;
+        }
+      }
+
+      // 결과 출력
+      if (found) {
+        document.getElementById("result").innerHTML = `
+          <h3>✨ ${found.sign} ✨</h3>
+          <p>${gender === "male" ? "남성" : "여성"}분에게 ${found.trait}이(가) 강하게 나타나는 경향이 있어요.</p>
+        `;
+      } else {
+        document.getElementById("result").innerHTML = "별자리를 찾을 수 없어요 😢";
+      }
+    });
+  </script>
+</body>
+</html>
