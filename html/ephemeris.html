@@ -2,22 +2,24 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>🔮 통합 운세 분석기</title>
+  <title>🔮 순수 웹 운세 보기</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 1em; }
-    h1, h2 { text-align: center; }
-    form > div { margin: 0.5em 0; }
-    label { display: block; margin-bottom: 0.2em; }
-    input, select, button { width: 100%; padding: 0.5em; font-size: 1em; }
-    #result { margin-top: 2em; border-top: 1px solid #ddd; padding-top: 1em; }
-    section { margin-bottom: 2em; }
-    ul { padding-left: 1.2em; }
+    body { font-family: sans-serif; max-width:600px; margin:2em auto; }
+    h1 { text-align:center; }
+    form div { margin:0.5em 0; }
+    label { display:block; margin-bottom:0.2em; }
+    input, select, button { width:100%; padding:0.5em; font-size:1em; }
+    #result { margin-top:2em; border-top:1px solid #ccc; padding-top:1em; }
+    section { margin-bottom:1.5em; }
+    ul { padding-left:1.2em; }
   </style>
+  <!-- Mivion Ephemeris UMD 빌드 (전역 $const/$processor/$moshier 제공) -->
+  <script src="https://cdn.jsdelivr.net/gh/mivion/ephemeris@master/ephemeris-0.1.0.js"></script>
 </head>
 <body>
 
-  <h1>🔮 통합 운세 분석기</h1>
-  <form id="birthForm">
+  <h1>🔮 순수 웹 운세 보기</h1>
+  <form id="form">
     <div>
       <label>생년월일</label>
       <input type="date" name="birthDate" required>
@@ -27,8 +29,8 @@
       <input type="time" name="birthTime" required>
     </div>
     <div>
-      <label>출생지 (City, Country)</label>
-      <input type="text" name="birthPlace" required>
+      <label>출생지 (예: Seoul, Korea)</label>
+      <input type="text" name="birthPlace" placeholder="City, Country" required>
     </div>
     <div>
       <label>성별</label>
@@ -37,139 +39,127 @@
         <option value="female">여성</option>
       </select>
     </div>
-    <button type="submit">운세 분석하기</button>
+    <button type="submit">운세 보기</button>
   </form>
 
   <div id="result"></div>
 
-  <!-- 1) non-module 방식으로 ephemeris 로드 -->
-  <!--
-  <script src="https://cdn.jsdelivr.net/npm/ephemeris@0.1.0/ephemeris-0.1.0.js"></script>
-  -->
-  <script src="https://cdn.jsdelivr.net/npm/ephemeris@2.0.0/index.min.js"></script>
   <script>
-    // 2) 헬퍼 함수들
+  document.addEventListener('DOMContentLoaded',()=>{
+    // 천간·지지
     const stems    = ["갑","을","병","정","무","기","경","신","임","계"];
     const branches = ["자","축","인","묘","진","사","오","미","신","유","술","해"];
-    const zodiac   = [
-      { name:"양자리",   start:   0 }, { name:"황소자리",  start:  30 },
-      { name:"쌍둥이자리", start:  60 }, { name:"게자리",    start:  90 },
-      { name:"사자자리",  start: 120 }, { name:"처녀자리",  start: 150 },
-      { name:"천칭자리",  start: 180 }, { name:"전갈자리",  start: 210 },
-      { name:"사수자리",  start: 240 }, { name:"염소자리",  start: 270 },
-      { name:"물병자리",  start: 300 }, { name:"물고기자리", start: 330 }
+    // 12별자리 황경 구간
+    const zodiac = [
+      {name:"양자리",start:0},{name:"황소자리",start:30},
+      {name:"쌍둥이자리",start:60},{name:"게자리",start:90},
+      {name:"사자자리",start:120},{name:"처녀자리",start:150},
+      {name:"천칭자리",start:180},{name:"전갈자리",start:210},
+      {name:"사수자리",start:240},{name:"염소자리",start:270},
+      {name:"물병자리",start:300},{name:"물고기자리",start:330}
     ];
-
-    function getYearPillar(year) {
-      const idx = (year - 4) % 60;
-      return stems[idx % 10] + branches[idx % 12];
+    // 년주 계산
+    function getYearPillar(Y){
+      const i = (Y - 4) % 60;
+      return stems[i%10] + branches[i%12];
     }
-
-    function getZodiacName(lon) {
-      lon = ((lon % 360) + 360) % 360;
-      for (let i = zodiac.length - 1; i >= 0; i--) {
-        if (lon >= zodiac[i].start) return zodiac[i].name;
+    // 황도경→별자리 이름
+    function getZodiac(lon){
+      lon = (lon%360+360)%360;
+      for(let i=zodiac.length-1;i>=0;i--){
+        if(lon>=zodiac[i].start) return zodiac[i].name;
       }
       return zodiac[0].name;
     }
-
-    function getLuckCycles(gender, birthYear) {
-      const dir = (gender === "male" ?  1 : -1);
-      const base = (birthYear - 4) % 60;
-      const cycles = [];
-      for (let i = 1; i <= 8; i++) {
-        const idx = (base + dir * i + 60) % 60;
-        cycles.push(stems[idx % 10] + branches[idx % 12]);
-      }
-      return cycles;
+    // 대운(단순: 10세 단위, 성별에 따라 진행방향)
+    function getLuckCycles(gender,Y){
+      const dir = (gender==="male"?1:-1);
+      const base = (Y-4)%60;
+      return Array.from({length:8},(_,i)=>{
+        const idx = (base + dir*(i+1) + 60)%60;
+        return stems[idx%10] + branches[idx%12];
+      });
     }
-
-    async function geocode(place) {
+    // OpenStreetMap Nominatim 지오코딩
+    async function geocode(place){
       const res = await fetch(
-        "https://nominatim.openstreetmap.org/search?" +
-        new URLSearchParams({ q: place, format: "json", limit:1 })
+        "https://nominatim.openstreetmap.org/search?"
+        + new URLSearchParams({q:place,format:"json",limit:1})
       );
       const arr = await res.json();
-      if (!arr.length) throw new Error("출생지를 찾을 수 없습니다");
-      return { lat:+arr[0].lat, lon:+arr[0].lon };
+      if(!arr.length) throw new Error("출생지를 찾을 수 없습니다");
+      return {lat:+arr[0].lat, lon:+arr[0].lon};
     }
 
-    // 3) 폼 처리 & 연동
-    const form = document.getElementById("birthForm");
-    const resultDiv = document.getElementById("result");
+    const form = document.getElementById("form");
+    const result = document.getElementById("result");
 
-    form.addEventListener("submit", async e => {
+    form.addEventListener("submit",async e=>{
       e.preventDefault();
-      resultDiv.textContent = "로딩 중…";
+      result.innerHTML = "<p>로딩 중…</p>";
 
       try {
-        const fd = new FormData(form);
-        const [dateStr, timeStr, place, gender] = [
-          fd.get("birthDate"),
-          fd.get("birthTime"),
-          fd.get("birthPlace"),
-          fd.get("gender")
+        const fm = new FormData(form);
+        const [d, t, place, gender] = [
+          fm.get("birthDate"),
+          fm.get("birthTime"),
+          fm.get("birthPlace"),
+          fm.get("gender")
         ];
-        const [Y,M,D] = dateStr.split("-").map(v=>+v);
-        const [h,m]   = timeStr.split(":").map(v=>+v);
+        const [Y,M,D] = d.split("-").map(v=>+v);
+        const [h,m]   = t.split(":").map(v=>+v);
 
-        // 위치
-        const { lat, lon } = await geocode(place);
+        // 1) 출생지 → 위도경도
+        const {lat,lon} = await geocode(place);
 
-        // Ephemeris 세팅
-        $const.tlong = lon;
+        // 2) Ephemeris 세팅
         $const.glat  = lat;
+        $const.tlong = lon;
         $processor.init();
 
-        // 주요 행성 계산
-        const planets = ["sun","moon","mercury","venus","mars","jupiter","saturn"];
-        const info = planets.map(name => {
+        // 3) 주요 행성 계산
+        const bodies = ["sun","moon","mercury","venus","mars","jupiter","saturn"];
+        const info = bodies.map(b=>{
           $processor.calc(
-            { year:Y, month:M, day:D, hours:h, minutes:m, seconds:0 },
-            $moshier.body[name]
+            {year:Y,month:M,day:D,hours:h,minutes:m,seconds:0},
+            $moshier.body[b]
           );
-          const lonDeg = $moshier.body[name].position.longitude;
-          return {
-            name,
-            deg: lonDeg.toFixed(2),
-            sign: getZodiacName(lonDeg)
-          };
+          const lonDeg = $moshier.body[b].position.longitude;
+          return {name:b,lon:lonDeg.toFixed(2),sign:getZodiac(lonDeg)};
         });
 
-        // 사주 & 대운
+        // 4) 사주·대운
         const yearPillar = getYearPillar(Y);
-        const cycles     = getLuckCycles(gender, Y);
+        const luckCycles = getLuckCycles(gender,Y);
 
-        // 결과 렌더링
+        // 5) 결과 렌더링
         let html = `
           <section>
             <h2>1. 사주 (년주)</h2>
             <p>출생 연도 천간·지지: <strong>${yearPillar}</strong></p>
           </section>
           <section>
-            <h2>2. 행성별 운세</h2>
+            <h2>2. 행성별 별자리 운세</h2>
             <ul>`;
         info.forEach(p=>{
-          html += `<li>🌟 ${p.name.toUpperCase()}: ${p.sign} (${p.deg}°)</li>`;
+          html += `<li>🌟 ${p.name.toUpperCase()}: ${p.sign} (${p.lon}°)</li>`;
         });
-        html += `</ul>
-          </section>
+        html += `</ul></section>
           <section>
-            <h2>3. 대운</h2>
+            <h2>3. 대운 (10세마다)</h2>
             <ul>`;
-        cycles.forEach((c,i)=>{
+        luckCycles.forEach((c,i)=>{
           html += `<li>${(i+1)*10}대운: ${c}</li>`;
         });
-        html += `</ul>
-          </section>`;
+        html += `</ul></section>`;
 
-        resultDiv.innerHTML = html;
+        result.innerHTML = html;
       }
-      catch(err) {
-        console.log(err);
-        resultDiv.innerHTML = `<p style="color:red;">오류: ${err.message}</p>`;
+      catch(ex){
+        result.innerHTML = `<p style="color:red;">오류: ${ex.message}</p>`;
       }
     });
+  });
   </script>
 </body>
 </html>
