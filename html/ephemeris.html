@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ephemeris Sample - Sun Position</title>
+</head>
+<body>
+  <h2>오늘의 태양 위치 🌞</h2>
+  <div id="output">로딩 중...</div>
+
+  <!-- Moshier 기반 ephemeris 스크립트 -->
+  <script src="ephemeris-0.1.0.js"></script>
+  <script>
+    // 날짜 설정 (예: 현재 날짜)
+    const now = new Date();
+    const date = {
+      year: now.getFullYear(),
+      month: now.getMonth() + 1,
+      day: now.getDate(),
+      hours: now.getHours(),
+      minutes: now.getMinutes(),
+      seconds: now.getSeconds()
+    };
+
+    // 관측 위치 (예: 베를린)
+    $const.tlong = 13.4050; // 경도
+    $const.glat = 52.5200;  // 위도
+
+    // 계산 시작
+    $processor.init();
+    $processor.calc(date, $moshier.body.sun);
+
+    // 결과 출력
+    const pos = $moshier.body.sun.position;
+    const html = `
+      <ul>
+        <li><strong>적경 (RA)</strong>: ${pos.ra.toFixed(5)} 시간</li>
+        <li><strong>적위 (Dec)</strong>: ${pos.dec.toFixed(5)} 도</li>
+        <li><strong>황경 (Longitude)</strong>: ${pos.longitude.toFixed(5)} 도</li>
+        <li><strong>거리 (Distance)</strong>: ${pos.distance.toFixed(5)} AU</li>
+      </ul>
+    `;
+    document.getElementById("output").innerHTML = html;
+  </script>
+</body>
+</html>
